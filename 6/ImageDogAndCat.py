@@ -6,7 +6,7 @@ from langchain_core.messages import HumanMessage, AIMessage
 model = ChatOpenAI(model="gpt-4.1-mini", api_key=OPEN_API)
 st.title("GPTBOT")
 
-if images := st.file_uploader("본인의 전신이 보이는 사진을 올려주세요!", type=['png', 'jpg', 'jpeg'], accept_multiple_files=True):
+if images := st.file_uploader("사진을 올려주세요!", type=['png', 'jpg', 'jpeg'], accept_multiple_files=True):
     image_url = []
     for image in images:
         st.image(image)
