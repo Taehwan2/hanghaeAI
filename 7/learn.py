@@ -18,12 +18,11 @@ from transformers import AutoModelForCausalLM, AutoTokenizer
 from datasets import load_dataset
 from trl import SFTConfig, SFTTrainer, DataCollatorForCompletionOnlyLM
 
-
+#완디비 시작
 wandb.init(project='Hanghae99', name='gpt-finetuning2')
-with open('./basket.json', 'rb') as f:
-    d = json.load(f)
 
 
+#사용안함
 def formatting_prompts_func(example):
     output_texts = []
     for i in range(len(example['instruction'])):
@@ -32,14 +31,8 @@ def formatting_prompts_func(example):
     return output_texts
 
 
-# 데이터 분할
-#n_insts = len(formatted_data)
-#train_data = formatted_data[:int(n_insts * 0.8)]
-#eval_data = formatted_data[int(n_insts * 0.8):]
-#train_dataset = Dataset.from_list(train_data)
-#eval_dataset = Dataset.from_list(eval_data)
 
-
+#모델불러오기
 hf_token = ''
 login(hf_token)
 model_name = "LGAI-EXAONE/EXAONE-3.5-2.4B-Instruct"
@@ -59,11 +52,30 @@ tokenizer = AutoTokenizer.from_pretrained(
 response_template = " ### Answer:"
 collator = DataCollatorForCompletionOnlyLM(response_template, tokenizer=tokenizer)
 
+
+
+#파일열고 저장하기 
+with open('./basket.json', 'rb') as f:
+    d = json.load(f)
+
+n_insts = len(d)
+train_data = d[:int(n_insts * 0.8)]
+eval_data = d[int(n_insts * 0.8):]
+
+
 formatted_data = [
     {"instruction": instr, "output": out} 
-    for instr, out in zip(d["instruction"], d["output"])
+    for instr, out in zip(train_data["instruction"], train_data["output"])
 ]
+
+formatted_data2 = [
+    {"instruction": instr, "output": out} 
+    for instr, out in zip(eval_data["instruction"], eval_data["output"])
+]
+
 train_dataset = Dataset.from_list(formatted_data)
+eval_dataset =  Dataset.from_list(formatted_data2)
+
 def formatting_prompts_func2(example):
     return f"### Question: {example['instruction']}\n ### Answer: {example['output']}"
 
@@ -73,12 +85,12 @@ def compute_metrics(eval_pred):
     loss = torch.nn.CrossEntropyLoss()(torch.tensor(logits), torch.tensor(labels))
     return {"eval_loss": loss.item()}
     
-
+#실제 학습하기
 trainer = SFTTrainer(
     model=model,
     args=SFTConfig(output_dir="/tmp/clm-instruction-tuning"),
     train_dataset=train_dataset,
-    #eval_dataset=eval_dataset,
+    eval_dataset=eval_dataset,
     formatting_func=formatting_prompts_func2,
     data_collator=collator,
     compute_metrics=compute_metrics
