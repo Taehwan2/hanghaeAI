@@ -58,20 +58,17 @@ collator = DataCollatorForCompletionOnlyLM(response_template, tokenizer=tokenize
 with open('./basket.json', 'rb') as f:
     d = json.load(f)
 
-n_insts = len(d)
-train_data = d[:int(n_insts * 0.8)]
-eval_data = d[int(n_insts * 0.8):]
+
 
 
 formatted_data = [
     {"instruction": instr, "output": out} 
-    for instr, out in zip(train_data["instruction"], train_data["output"])
+    for instr, out in zip(d["instruction"], d["output"])
 ]
 
-formatted_data2 = [
-    {"instruction": instr, "output": out} 
-    for instr, out in zip(eval_data["instruction"], eval_data["output"])
-]
+n_insts = len(formatted_data)
+train_data = formatted_data[:int(n_insts * 0.8)]
+eval_data = formatted_data[int(n_insts * 0.8):]
 
 train_dataset = Dataset.from_list(formatted_data)
 eval_dataset =  Dataset.from_list(formatted_data2)
