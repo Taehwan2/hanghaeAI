@@ -70,8 +70,8 @@ n_insts = len(formatted_data)
 train_data = formatted_data[:int(n_insts * 0.8)]
 eval_data = formatted_data[int(n_insts * 0.8):]
 
-train_dataset = Dataset.from_list(formatted_data)
-eval_dataset =  Dataset.from_list(formatted_data2)
+train_dataset = Dataset.from_list(train_data)
+eval_dataset =  Dataset.from_list(eval_data)
 
 def formatting_prompts_func2(example):
     return f"### Question: {example['instruction']}\n ### Answer: {example['output']}"
